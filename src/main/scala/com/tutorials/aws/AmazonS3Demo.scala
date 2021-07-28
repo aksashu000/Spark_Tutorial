@@ -1,8 +1,9 @@
 package com.tutorials.aws
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import com.amazonaws.SDKGlobalConfiguration
+import org.apache.spark.sql.functions._
 
 object AmazonS3Demo{
   def main(args: Array[String]): Unit = {
@@ -31,6 +32,15 @@ object AmazonS3Demo{
     val employeeDf = spark.read.option("multiLine","true").json("s3a://s3tutorial-employee-data/*")
     println("Finished...")
     employeeDf.show(truncate = false)
+
+    //Add a new column 'validZipCode' with value as 'true' if length of zipCode is 5, else 'false'
+    val newDF = employeeDf.withColumn("validZipCode", when(length(col("zipCode"))===5, "true").otherwise("false"))
+    newDF.show(truncate = false)
+
+    //Write the new dataframe to S3 with overwrite mode, in parquet format
+    println("Starting to write...")
+    newDF.write.format("parquet").mode(SaveMode.Overwrite).save("s3a://s3tutorial-employee-data/valid-zip-code-data/")
+    println("Write completed...")
 
     spark.stop()
   }
