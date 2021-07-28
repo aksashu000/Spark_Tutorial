@@ -29,7 +29,7 @@ object AmazonS3Demo{
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.endpoint", s3EndPoint)
 
     println("Starting to read from S3...")
-    val employeeDf = spark.read.option("multiLine","true").json("s3a://s3tutorial-employee-data/*")
+    val employeeDf = spark.read.option("multiLine","true").json("s3a://s3tutorial-employee-data/employee.json")
     println("Finished...")
     employeeDf.show(truncate = false)
 
@@ -37,9 +37,9 @@ object AmazonS3Demo{
     val newDF = employeeDf.withColumn("validZipCode", when(length(col("zipCode"))===5, "true").otherwise("false"))
     newDF.show(truncate = false)
 
-    //Write the new dataframe to S3 with overwrite mode, in parquet format
+    //Write the new dataframe to S3 with overwrite mode, in parquet format. Capture total time taken to write.
     println("Starting to write...")
-    newDF.write.format("parquet").mode(SaveMode.Overwrite).save("s3a://s3tutorial-employee-data/valid-zip-code-data/")
+    spark.time(newDF.write.format("parquet").mode(SaveMode.Overwrite).save("s3a://s3tutorial-employee-data/valid-zip-code-data/"))
     println("Write completed...")
 
     spark.stop()
