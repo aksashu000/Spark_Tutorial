@@ -19,8 +19,9 @@ object AzureBlobDemo {
     spark.conf.set("fs.azure.account.key.sparkazuretutorial.blob.core.windows.net", ACCESS_KEY)
 
     //Read the data from "wasb" file system -> Windows Azure Storage Blob
+    //wasbs is secure, need to import certificate of Azure blob end point URL in the java keystore
     println("Starting to read from Azure Blob...")
-    val df = spark.read.option("multiLine","true").json("wasb://sparkwithazure@sparkazuretutorial.blob.core.windows.net/employee.json")
+    val df = spark.read.option("multiLine","true").json("wasbs://sparkwithazure@sparkazuretutorial.blob.core.windows.net/employee.json")
     println("Reading finished...")
     df.show(truncate = false)
 
