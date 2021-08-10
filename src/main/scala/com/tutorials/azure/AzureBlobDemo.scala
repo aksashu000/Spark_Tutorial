@@ -32,7 +32,7 @@ object AzureBlobDemo {
 
     //Write the new dataframe to Azure Blob with overwrite mode, in parquet format. Capture total time taken to write.
     println("Starting to write...")
-    spark.time(newDF.write.format("parquet").mode(SaveMode.Overwrite).save("wasb://sparkwithazure@sparkazuretutorial.blob.core.windows.net/valid-zip-code-data/"))
+    spark.time(newDF.write.format("parquet").mode(SaveMode.Overwrite).save("wasbs://sparkwithazure@sparkazuretutorial.blob.core.windows.net/valid-zip-code-data/"))
     println("Write completed...")
   }
 }
