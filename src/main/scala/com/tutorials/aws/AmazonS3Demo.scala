@@ -10,11 +10,8 @@ object AmazonS3Demo{
     //Set logger to control log output
     Logger.getLogger("org").setLevel(Level.ERROR)
 
-    //Set the property to use V4 signature of S3
-    System.setProperty(SDKGlobalConfiguration.ENABLE_S3_SIGV4_SYSTEM_PROPERTY, "true")
-
     //Create Spark Session
-    val spark = SparkSession.builder.appName("SparkWithS3").master("local[*]").getOrCreate()
+    val spark = SparkSession.builder.appName("SparkWithS3").master("local[2]").getOrCreate()
 
     //Get access key and secret key from environment variables
     val FS_S3A_ACCESS_KEY = sys.env("FS_S3A_ACCESS_KEY")
@@ -29,17 +26,18 @@ object AmazonS3Demo{
     spark.sparkContext.hadoopConfiguration.set("fs.s3a.endpoint", s3EndPoint)
 
     println("Starting to read from S3...")
-    val employeeDf = spark.read.option("multiLine","true").json("s3a://s3tutorial-employee-data/employee.json")
+    val employeeDf = spark.read.options(Map("header"-> "true")).csv("s3a://s3tutorial-employee-data/data1.csv")
     println("Finished...")
     employeeDf.show(truncate = false)
+    println("Number of partitions: " + employeeDf.rdd.getNumPartitions)
 
-    //Add a new column 'validZipCode' with value as 'true' if length of zipCode is 5, else 'false'
-    val newDF = employeeDf.withColumn("validZipCode", when(length(col("zipCode"))===5, "true").otherwise("false"))
+    //Add a new column 'size' with value as 'Large' if quantity > 100, else value will be 'Small'
+    val newDF = employeeDf.withColumn("size", when(col("quantity")>=100, "Large").otherwise("Small"))
     newDF.show(truncate = false)
 
     //Write the new dataframe to S3 with overwrite mode, in parquet format. Capture total time taken to write.
     println("Starting to write...")
-    spark.time(newDF.write.format("parquet").mode(SaveMode.Overwrite).save("s3a://s3tutorial-employee-data/valid-zip-code-data/"))
+    spark.time(newDF.write.format("parquet").mode(SaveMode.Overwrite).save("s3a://s3tutorial-employee-data/output/"))
     println("Write completed...")
 
     spark.stop()
